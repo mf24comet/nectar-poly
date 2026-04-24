@@ -7,6 +7,10 @@ edition = "2024"
 name = "nectar-poly"
 path = "src/main.rs"
 
+[[bin]]
+name = "seed"
+path = "src/bin/seed.rs"
+
 [dependencies]
 axum = { version = "0.7", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
