@@ -23,6 +23,7 @@ config = "0.14"
 thiserror = "1"
 anyhow = "1"
 base64 = "0.22"
+dotenvy = "0.15"
 constant_time_eq = "0.3"
 http = "1"
 

@@ -8,6 +8,8 @@ mod storage;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenvy::dotenv().ok();
+
     let settings = config::Settings::load().map_err(|e| {
         eprintln!("failed to load configuration: {e}");
         e

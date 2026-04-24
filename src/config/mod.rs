@@ -25,7 +25,7 @@ impl Settings {
             .set_default("request_timeout_secs", 30_i64)?
             .add_source(
                 Environment::with_prefix("APP")
-                    .separator("_")
+                    .separator("__")
                     .try_parsing(true),
             )
             .build()?

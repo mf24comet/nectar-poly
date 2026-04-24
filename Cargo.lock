@@ -1085,6 +1085,7 @@ dependencies = [
  "chrono",
  "config",
  "constant_time_eq",
+ "dotenvy",
  "http",
  "http-body-util",
  "serde",
