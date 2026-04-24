@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::{
     domain::{PolyEventRequest, RawEvent},
-    storage::events::{EventRepository, StorageError},
+    storage::{StorageError, events::EventRepository},
 };
 
 use validator::ValidationError;

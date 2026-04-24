@@ -26,7 +26,10 @@ mod tests {
 
     #[test]
     fn redacts_bearer_token() {
-        assert_eq!(redact_auth_header("Bearer abc.def.ghi"), "Bearer [REDACTED]");
+        assert_eq!(
+            redact_auth_header("Bearer abc.def.ghi"),
+            "Bearer [REDACTED]"
+        );
     }
 
     #[test]

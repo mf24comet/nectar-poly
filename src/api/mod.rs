@@ -3,12 +3,12 @@ pub mod handlers;
 use std::{sync::Arc, time::Duration};
 
 use axum::{
+    Router,
     extract::Request,
-    http::{header, HeaderValue},
+    http::{HeaderValue, header},
     middleware::{self, Next},
     response::Response,
     routing::{get, post},
-    Router,
 };
 use tower_http::{limit::RequestBodyLimitLayer, timeout::TimeoutLayer, trace::TraceLayer};
 use uuid::Uuid;
@@ -23,6 +23,11 @@ pub fn build_router(state: Arc<AppState>) -> Router {
 
     let protected = Router::new()
         .route("/v1/events", post(handlers::ingest::ingest))
+        .route("/v1/devices", get(handlers::devices::list_devices))
+        .route("/v1/devices/:id", get(handlers::devices::get_device))
+        .route("/v1/alerts", get(handlers::alerts::list_alerts))
+        .route("/v1/alerts/:id", get(handlers::alerts::get_alert))
+        .route("/v1/software", get(handlers::software::list_software))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             require_basic_auth,
@@ -55,7 +60,10 @@ async fn add_request_id(mut request: Request, next: Next) -> Response {
 async fn add_security_headers(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
     let h = response.headers_mut();
-    h.insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    h.insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        HeaderValue::from_static("nosniff"),
+    );
     h.insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
     h.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
     h.insert(
@@ -69,7 +77,7 @@ async fn add_security_headers(request: Request, next: Next) -> Response {
 mod tests {
     use super::*;
     use axum::body::Body;
-    use base64::{engine::general_purpose::STANDARD, Engine};
+    use base64::{Engine, engine::general_purpose::STANDARD};
     use http::{Method, Request, StatusCode};
     use sqlx::postgres::PgPoolOptions;
     use tower::ServiceExt;
@@ -95,7 +103,12 @@ mod tests {
     #[tokio::test]
     async fn health_returns_200() {
         let resp = make_app()
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
@@ -190,7 +203,12 @@ mod tests {
     #[tokio::test]
     async fn response_includes_request_id_header() {
         let resp = make_app()
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert!(resp.headers().contains_key("x-request-id"));
@@ -199,7 +217,12 @@ mod tests {
     #[tokio::test]
     async fn response_includes_security_headers() {
         let resp = make_app()
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.headers()["x-content-type-options"], "nosniff");
@@ -210,7 +233,12 @@ mod tests {
     #[tokio::test]
     async fn unknown_route_returns_404() {
         let resp = make_app()
-            .oneshot(Request::builder().uri("/not-found").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/not-found")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::NOT_FOUND);
@@ -220,8 +248,13 @@ mod tests {
     #[ignore = "requires a running PostgreSQL instance — set APP_DATABASE_URL"]
     async fn ingest_valid_event_returns_201() {
         let settings = crate::config::Settings::load().expect("settings");
-        let db = crate::storage::connect(&settings).await.expect("db connect");
-        sqlx::migrate!("./migrations").run(&db).await.expect("migrate");
+        let db = crate::storage::connect(&settings)
+            .await
+            .expect("db connect");
+        sqlx::migrate!("./migrations")
+            .run(&db)
+            .await
+            .expect("migrate");
         let state = AppState::new(db, settings);
 
         let body = r#"{"event_type":"device.online","tenant_id":"t1","payload":{"key":"val"}}"#;

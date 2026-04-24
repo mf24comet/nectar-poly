@@ -33,9 +33,17 @@ pub fn validate(event: &PolyEventRequest) -> Result<(), ValidationError> {
     if !event.payload.is_object() {
         return Err(ValidationError::PayloadNotObject);
     }
-    check_optional_id(&event.tenant_id, "tenant_id", ValidationError::EmptyTenantId)?;
+    check_optional_id(
+        &event.tenant_id,
+        "tenant_id",
+        ValidationError::EmptyTenantId,
+    )?;
     check_optional_id(&event.site_id, "site_id", ValidationError::EmptySiteId)?;
-    check_optional_id(&event.device_id, "device_id", ValidationError::EmptyDeviceId)?;
+    check_optional_id(
+        &event.device_id,
+        "device_id",
+        ValidationError::EmptyDeviceId,
+    )?;
     Ok(())
 }
 
@@ -89,32 +97,47 @@ mod tests {
     #[test]
     fn empty_event_type_is_rejected() {
         let e = event("", json!({}), None);
-        assert!(matches!(validate(&e), Err(ValidationError::MissingEventType)));
+        assert!(matches!(
+            validate(&e),
+            Err(ValidationError::MissingEventType)
+        ));
     }
 
     #[test]
     fn whitespace_event_type_is_rejected() {
         let e = event("   ", json!({}), None);
-        assert!(matches!(validate(&e), Err(ValidationError::MissingEventType)));
+        assert!(matches!(
+            validate(&e),
+            Err(ValidationError::MissingEventType)
+        ));
     }
 
     #[test]
     fn event_type_exceeding_max_length_is_rejected() {
         let long = "a".repeat(MAX_EVENT_TYPE_LEN + 1);
         let e = event(&long, json!({}), None);
-        assert!(matches!(validate(&e), Err(ValidationError::EventTypeTooLong)));
+        assert!(matches!(
+            validate(&e),
+            Err(ValidationError::EventTypeTooLong)
+        ));
     }
 
     #[test]
     fn payload_must_be_object() {
         let e = event("device.online", json!([1, 2, 3]), None);
-        assert!(matches!(validate(&e), Err(ValidationError::PayloadNotObject)));
+        assert!(matches!(
+            validate(&e),
+            Err(ValidationError::PayloadNotObject)
+        ));
     }
 
     #[test]
     fn null_payload_is_rejected() {
         let e = event("device.online", serde_json::Value::Null, None);
-        assert!(matches!(validate(&e), Err(ValidationError::PayloadNotObject)));
+        assert!(matches!(
+            validate(&e),
+            Err(ValidationError::PayloadNotObject)
+        ));
     }
 
     #[test]

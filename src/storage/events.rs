@@ -1,14 +1,8 @@
 use sqlx::PgPool;
-use thiserror::Error;
 use uuid::Uuid;
 
+use super::StorageError;
 use crate::domain::RawEvent;
-
-#[derive(Debug, Error)]
-pub enum StorageError {
-    #[error("database error: {0}")]
-    Database(#[from] sqlx::Error),
-}
 
 pub struct EventRepository {
     pool: PgPool,

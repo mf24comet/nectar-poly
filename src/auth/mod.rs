@@ -1,10 +1,10 @@
 use axum::{
     extract::State,
-    http::{header, Request, StatusCode},
+    http::{Request, StatusCode, header},
     middleware::Next,
     response::{IntoResponse, Json, Response},
 };
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use constant_time_eq::constant_time_eq;
 use serde_json::json;
 use std::sync::Arc;
